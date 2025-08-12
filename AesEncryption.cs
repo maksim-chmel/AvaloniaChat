@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace AvaloniaChat;
 
-public class AesEncryption(byte[] key, byte[] iv)
+public class AesEncryption(byte[] key, byte[] iv) : IAesEncryption
 {
     public string Encrypt(string plainText)
     {

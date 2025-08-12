@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace AvaloniaChat;
 
-public class ChatHost
+public class ChatHost(IChatService chatService,ISecureChannel secureChannel) : IChatHost
 {
-    private readonly ChatService _chatService = new();
-    private readonly SecureChannel _secureChannel = new();
+    
     private TcpListener? _listener;
 
     public event Action<string>? OnStatusChanged;
@@ -49,15 +48,15 @@ public class ChatHost
                 OnStatusChanged?.Invoke("✅ Клиент подключен!");
 
                 _stream = client.GetStream();
-                _aes = await _secureChannel.InitializeAsHostAsync(_stream);
+                _aes = await secureChannel.InitializeAsHostAsync(_stream);
                 _ctsReceiver = new CancellationTokenSource();
 
                 OnStatusChanged?.Invoke("💬 Чат запущен!");
 
-                _chatService.OnMessageReceived += msg => OnMessageReceived?.Invoke(msg);
-                _chatService.OnStatusChanged += status => OnStatusChanged?.Invoke(status);
+                chatService.OnMessageReceived += msg => OnMessageReceived?.Invoke(msg);
+                chatService.OnStatusChanged += status => OnStatusChanged?.Invoke(status);
                 
-                _ = _chatService.StartReceiverLoop(_stream, _aes, _ctsReceiver.Token);
+                _ = chatService.StartReceiverLoop(_stream, _aes, _ctsReceiver.Token);
             }
             else
             {
@@ -97,7 +96,7 @@ public class ChatHost
 
         try
         {
-            await _chatService.SendMessageAsync(_stream, _aes, message);
+            await chatService.SendMessageAsync(_stream, _aes, message);
         }
         catch (Exception ex)
         {

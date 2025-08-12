@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AvaloniaChat;
 
-public class ChatService
+public class ChatService : IChatService
 {
     public event Action<string>? OnMessageReceived;
     public event Action<string>? OnStatusChanged;

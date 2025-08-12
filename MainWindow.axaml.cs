@@ -13,12 +13,15 @@ namespace AvaloniaChat
     public partial class MainWindow : Window
     {
         private ChatHost? _host;
+        private readonly IChatService _chatService;
+        private readonly ISecureChannel _secureChannel;
         private ChatClient? _client;
-        private NetworkHelper _networkHelper;
 
-        public MainWindow()
+        public MainWindow(IChatService chatService, ISecureChannel secureChannel)
         {
-            _networkHelper = new NetworkHelper();
+            _chatService = chatService;
+            _secureChannel = secureChannel;
+
             InitializeComponent();
 
            
@@ -128,7 +131,7 @@ namespace AvaloniaChat
 
             if (HostRadio.IsChecked == true)
             {
-                _host = new ChatHost();
+                _host = new ChatHost(_chatService, _secureChannel);
                 _host.OnStatusChanged += UpdateStatus;
                 _host.OnMessageReceived += msg => AddMessage(msg, false);
                 _host.OnClientConnected += () =>
@@ -146,7 +149,7 @@ namespace AvaloniaChat
                     return;
                 }
 
-                _client = new ChatClient();
+                _client = new ChatClient(_chatService, _secureChannel);
                 _client.OnStatusChanged += UpdateStatus;
                 _client.OnMessageReceived += msg => AddMessage(msg, false);
 

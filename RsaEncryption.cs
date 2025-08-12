@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace AvaloniaChat;
 
-public class RsaEncryption
+public class RsaEncryption : IRsaEncryption
 {
     private RSA _rsa = RSA.Create(2048);
 

@@ -4,11 +4,11 @@ using System.Net.Sockets;
 
 namespace AvaloniaChat;
 
-public class NetworkHelper
+public static class NetworkHelper
 {
     public static string GetLocalIpAddress()
     {
-        foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+        foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
         {
             if (ni.OperationalStatus != OperationalStatus.Up) continue;
             var ipProps = ni.GetIPProperties();

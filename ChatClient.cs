@@ -6,14 +6,11 @@ using System.Threading.Tasks;
 
 namespace AvaloniaChat;
 
-public class ChatClient
+public class ChatClient(IChatService chatService,ISecureChannel secureChannel) : IChatClient
 {
     private TcpClient? _client;
 
     private CancellationTokenSource? _ctsReceiver;
-
-    private readonly ChatService _chatService = new();
-    private readonly SecureChannel _secureChannel = new();
 
     public event Action<string>? OnStatusChanged;
     public event Action<string>? OnMessageReceived;
@@ -42,20 +39,20 @@ public class ChatClient
 
         _client = client;
         Stream = _client.GetStream();
-        Aes = await _secureChannel.InitializeAsClientAsync(Stream);
+        Aes = await secureChannel.InitializeAsClientAsync(Stream);
 
         OnStatusChanged?.Invoke("💬 Подключено! Можно общаться.");
 
-        _chatService.OnMessageReceived += msg => OnMessageReceived?.Invoke(msg);
-        _chatService.OnStatusChanged += status => OnStatusChanged?.Invoke(status);
+        chatService.OnMessageReceived += msg => OnMessageReceived?.Invoke(msg);
+        chatService.OnStatusChanged += status => OnStatusChanged?.Invoke(status);
 
         _ctsReceiver = new CancellationTokenSource();
-        _ = _chatService.StartReceiverLoop(Stream, Aes, _ctsReceiver.Token);
+        _ = chatService.StartReceiverLoop(Stream, Aes, _ctsReceiver.Token);
 
         return true;
     }
 
-    private async Task<TcpClient?> ConnectWithRetryAsync(IPAddress serverIp, int port, int timeoutSeconds)
+    public async Task<TcpClient?> ConnectWithRetryAsync(IPAddress serverIp, int port, int timeoutSeconds)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -110,7 +107,7 @@ public class ChatClient
 
         try
         {
-            await _chatService.SendMessageAsync(Stream, Aes, message);
+            await chatService.SendMessageAsync(Stream, Aes, message);
         }
         catch (Exception ex)
         {
