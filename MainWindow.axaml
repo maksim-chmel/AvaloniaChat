@@ -1,0 +1,69 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AvaloniaChat.MainWindow"
+        Title="AvaloniaChat"
+        Width="510" Height="600"
+        MinWidth="380" MinHeight="500"
+        Background="White"
+        SizeToContent="Manual">
+
+    <DockPanel Margin="8" LastChildFill="True">
+
+      
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Height="40" VerticalAlignment="Center">
+
+            <Border Background="#F0F0F0" Padding="4,2" CornerRadius="6" BorderBrush="#CCC" BorderThickness="1" MinWidth="110" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <RadioButton Name="HostRadio" Content="Хост" Foreground="Black" FontSize="14" VerticalAlignment="Center"/>
+                    <RadioButton Name="ClientRadio" Content="Клиент" Foreground="Black" FontSize="14" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <TextBox Name="IpInput" IsEnabled="False" Watermark="IP адрес"
+                     Background="White" BorderBrush="#CCC" Foreground="Black"
+                     MinWidth="120" MaxWidth="150" Height="28"
+                     VerticalAlignment="Center" />
+
+            <TextBox Name="PortInput" Text="5000" Watermark="Порт"
+                     Background="White" BorderBrush="#CCC" Foreground="Black"
+                     Width="70" Height="28"
+                     VerticalAlignment="Center" />
+
+            <Button Name="StartButton" Content="Старт" Width="80" Height="28"
+                    Background="#0A84FF" Foreground="White" BorderBrush="#0A84FF"
+                    VerticalAlignment="Center"/>
+
+            <Button Name="DisconnectButton" Content="⏻" Width="36" Height="36"
+                    Background="#FF3B30" Foreground="White" BorderBrush="#FF3B30" IsEnabled="False"
+                    VerticalAlignment="Center"/>
+        </StackPanel>
+
+        
+        <Border DockPanel.Dock="Top" Background="#F0F0F0" CornerRadius="4"
+                Padding="6" Margin="0,8,0,8" BorderBrush="#CCC" BorderThickness="1" Height="28">
+            <TextBlock Name="StatusText" Foreground="Black" FontSize="12" 
+                       Text="Готово" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        </Border>
+
+       
+        <DockPanel DockPanel.Dock="Bottom" Height="50" Margin="0,8,0,0" LastChildFill="True" VerticalAlignment="Center">
+            <Button Name="SendButton" Content="➤" Width="44" Height="36"
+                    Background="#0A84FF" Foreground="White" BorderBrush="#0A84FF" IsEnabled="False"
+                    VerticalAlignment="Center" HorizontalAlignment="Right"
+                    DockPanel.Dock="Right" />
+            <TextBox Name="MessageInput" Watermark="Введите сообщение"
+                     Background="White" BorderBrush="#CCC" Foreground="Black"
+                     VerticalAlignment="Center"
+                     HorizontalAlignment="Stretch"
+                     Margin="0,0,8,0"/>
+        </DockPanel>
+
+       
+        <ListBox Name="MessagesList" Margin="0,6"
+                 Background="White" BorderBrush="#CCC" BorderThickness="1"
+                 Foreground="Black"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 HorizontalAlignment="Stretch"
+                 VerticalAlignment="Stretch"/>
+    </DockPanel>
+</Window>
