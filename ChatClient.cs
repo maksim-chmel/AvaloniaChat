@@ -9,19 +9,18 @@ namespace AvaloniaChat;
 public class ChatClient
 {
     private TcpClient? _client;
-    private NetworkStream? _stream;
-    private AesEncryption? _aes;
 
     private CancellationTokenSource? _ctsReceiver;
 
-    private readonly ChatService chatService = new();
-    private readonly SecureChannel secureChannel = new();
+    private readonly ChatService _chatService = new();
+    private readonly SecureChannel _secureChannel = new();
 
     public event Action<string>? OnStatusChanged;
     public event Action<string>? OnMessageReceived;
 
-    public NetworkStream? Stream => _stream;
-    public AesEncryption? Aes => _aes;
+    private NetworkStream? Stream { get; set; }
+
+    private AesEncryption? Aes { get; set; }
 
     public async Task<bool> ConnectToHostAsync(string ipString, int port, int timeoutSeconds)
     {
@@ -42,16 +41,16 @@ public class ChatClient
         }
 
         _client = client;
-        _stream = _client.GetStream();
-        _aes = await secureChannel.InitializeAsClientAsync(_stream);
+        Stream = _client.GetStream();
+        Aes = await _secureChannel.InitializeAsClientAsync(Stream);
 
         OnStatusChanged?.Invoke("💬 Подключено! Можно общаться.");
 
-        chatService.OnMessageReceived += msg => OnMessageReceived?.Invoke(msg);
-        chatService.OnStatusChanged += status => OnStatusChanged?.Invoke(status);
+        _chatService.OnMessageReceived += msg => OnMessageReceived?.Invoke(msg);
+        _chatService.OnStatusChanged += status => OnStatusChanged?.Invoke(status);
 
         _ctsReceiver = new CancellationTokenSource();
-        _ = chatService.StartReceiverLoop(_stream, _aes, _ctsReceiver.Token);
+        _ = _chatService.StartReceiverLoop(Stream, Aes, _ctsReceiver.Token);
 
         return true;
     }
@@ -103,7 +102,7 @@ public class ChatClient
 
     public async Task SendMessageAsync(string message)
     {
-        if (_stream == null || _aes == null)
+        if (Stream == null || Aes == null)
         {
             OnStatusChanged?.Invoke("❌ Нет подключения");
             return;
@@ -111,7 +110,7 @@ public class ChatClient
 
         try
         {
-            await chatService.SendMessageAsync(_stream, _aes, message);
+            await _chatService.SendMessageAsync(Stream, Aes, message);
         }
         catch (Exception ex)
         {
@@ -124,14 +123,17 @@ public class ChatClient
         try
         {
             _ctsReceiver?.Cancel();
-            _stream?.Close();
+            Stream?.Close();
             _client?.Close();
         }
-        catch { }
+        catch
+        {
+            // ignored
+        }
 
-        _stream = null;
+        Stream = null;
         _client = null;
-        _aes = null;
+        Aes = null;
         _ctsReceiver = null;
 
         OnStatusChanged?.Invoke("🔌 Отключено от сервера.");

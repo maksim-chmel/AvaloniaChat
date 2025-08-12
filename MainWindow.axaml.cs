@@ -1,160 +1,190 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Layout;
 
-namespace AvaloniaChat;
-
-public partial class MainWindow : Window
+namespace AvaloniaChat
 {
-    private ChatHost? _host;
-    private ChatClient? _client;
-
-    public MainWindow()
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
+        private ChatHost? _host;
+        private ChatClient? _client;
+        private NetworkHelper _networkHelper;
 
-        HostRadio.Checked += (_, __) => IpInput.IsEnabled = false;
-        ClientRadio.Checked += (_, __) => IpInput.IsEnabled = true;
-
-        StartButton.Click += async (_, __) => await StartChatAsync();
-        SendButton.Click += async (_, __) => await SendMessageAsync();
-        DisconnectButton.Click += DisconnectButton_Click;
-
-        SendButton.IsEnabled = false;
-        DisconnectButton.IsEnabled = false;
-    }
-
-    private void DisconnectButton_Click(object? sender, RoutedEventArgs e)
-    {
-        try
+        public MainWindow()
         {
-            if (_host != null)
-            {
-                _host.StopHostAsync();
-                _host = null;
-                UpdateStatus("🔌 Хост остановлен.");
-            }
-            else if (_client != null)
-            {
-                _client.Disconnect();
-                _client = null;
-                UpdateStatus("🔌 Клиент отключён.");
-            }
-        }
-        catch (Exception ex)
-        {
-            UpdateStatus($"❌ Ошибка при отключении: {ex.Message}");
-        }
+            _networkHelper = new NetworkHelper();
+            InitializeComponent();
 
-        StartButton.IsEnabled = true;
-        SendButton.IsEnabled = false;
-        DisconnectButton.IsEnabled = false;
-    }
+           
+            MessagesList.Items.Clear();
+            HostRadio.Checked += (_, __) => IpInput.IsEnabled = false;
+            ClientRadio.Checked += (_, __) => IpInput.IsEnabled = true;
 
-    private void AddMessage(string text, bool isOwn)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            var bubble = new Border
-            {
-                Background = isOwn ? new SolidColorBrush(Color.Parse("#0A84FF")) : new SolidColorBrush(Color.Parse("#2D2D2D")),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(8),
-                Margin = new Thickness(4),
-                MaxWidth = 300,
-                Child = new TextBlock
-                {
-                    Text = text,
-                    Foreground = isOwn ? Brushes.White : Brushes.White,
-                    TextWrapping = TextWrapping.Wrap
-                },
-                HorizontalAlignment = isOwn ? HorizontalAlignment.Right : HorizontalAlignment.Left
-            };
+            
+            StartButton.Click += async (_, __) => await StartChatAsync();
+            SendButton.Click += async (_, __) => await SendMessageAsync();
+            DisconnectButton.Click += DisconnectButton_Click;
 
-            MessagesList.Items.Add(bubble);
-            MessagesList.ScrollIntoView(bubble);
-        });
-    }
-
-    private async Task StartChatAsync()
-    {
-        StartButton.IsEnabled = false;
-        SendButton.IsEnabled = false;
-        DisconnectButton.IsEnabled = true;
-        MessagesList.Items.Clear();
-
-        if (!int.TryParse(PortInput.Text, out int port))
-        {
-            UpdateStatus("❌ Неверный порт");
-            StartButton.IsEnabled = true;
+            SendButton.IsEnabled = false;
             DisconnectButton.IsEnabled = false;
-            return;
-        }
-
-        if (HostRadio.IsChecked == true)
-        {
-            _host = new ChatHost();
-            _host.OnStatusChanged += UpdateStatus;
-            _host.OnMessageReceived += msg => AddMessage(msg, false);
-            _host.OnClientConnected += () =>
-                Dispatcher.UIThread.Post(() => SendButton.IsEnabled = true);
-
-            await _host.StartHostAsync(port);
-        }
-        else
-        {
-            if (!IPAddress.TryParse(IpInput.Text, out _))
+            
+            MessageInput.KeyDown += (s, e) =>
             {
-                UpdateStatus("❌ Неверный IP");
+                if (e.Key == Key.Enter && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                {
+                    _ = SendMessageAsync();
+                    e.Handled = true;
+                }
+            };
+           
+
+            Dispatcher.UIThread.Post(() => MessageInput.Focus());
+        }
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            MyIpText.Text = $"Мой IP: {NetworkHelper.GetLocalIpAddress()}";
+        }
+
+        
+        private void DisconnectButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            try
+            {
+                if (_host != null)
+                {
+                    _host.StopHostAsync();
+                    _host = null;
+                    UpdateStatus("🔌 Хост остановлен.");
+                }
+                else if (_client != null)
+                {
+                    _client.Disconnect();
+                    _client = null;
+                    UpdateStatus("🔌 Клиент отключён.");
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"❌ Ошибка при отключении: {ex.Message}");
+            }
+
+            StartButton.IsEnabled = true;
+            SendButton.IsEnabled = false;
+            DisconnectButton.IsEnabled = false;
+        }
+
+        private void AddMessage(string text, bool isOwn)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var bubble = new Border
+                {
+                    Background = isOwn
+                        ? new SolidColorBrush(Color.Parse("#0A84FF"))
+                        : new SolidColorBrush(Color.Parse("#2D2D2D")),
+                    CornerRadius = new CornerRadius(8),
+                    Padding = new Thickness(8),
+                    Margin = new Thickness(4),
+                    MaxWidth = 300,
+                    Child = new TextBlock
+                    {
+                        Text = text,
+                        Foreground = Brushes.White,
+                        TextWrapping = TextWrapping.Wrap
+                    },
+                    HorizontalAlignment = isOwn
+                        ? HorizontalAlignment.Right
+                        : HorizontalAlignment.Left
+                };
+
+                MessagesList.Items.Add(bubble);
+
+                
+                MessagesList.ScrollIntoView(MessagesList.ItemCount - 1);
+            });
+        }
+
+        private async Task StartChatAsync()
+        {
+            StartButton.IsEnabled = false;
+            SendButton.IsEnabled = false;
+            DisconnectButton.IsEnabled = true;
+            MessagesList.Items.Clear();
+
+            if (!int.TryParse(PortInput.Text, out int port))
+            {
+                UpdateStatus("❌ Неверный порт");
                 StartButton.IsEnabled = true;
                 DisconnectButton.IsEnabled = false;
                 return;
             }
 
-            _client = new ChatClient();
-            _client.OnStatusChanged += UpdateStatus;
-            _client.OnMessageReceived += msg => AddMessage(msg, false);
-
-            bool connected = await _client.ConnectToHostAsync(IpInput.Text, port, 10);
-            if (!connected)
+            if (HostRadio.IsChecked == true)
             {
-                UpdateStatus("❌ Не удалось подключиться");
-                StartButton.IsEnabled = true;
-                DisconnectButton.IsEnabled = false;
-                return;
+                _host = new ChatHost();
+                _host.OnStatusChanged += UpdateStatus;
+                _host.OnMessageReceived += msg => AddMessage(msg, false);
+                _host.OnClientConnected += () =>
+                    Dispatcher.UIThread.Post(() => SendButton.IsEnabled = true);
+
+                await _host.StartHostAsync(port);
             }
-            SendButton.IsEnabled = true;
+            else
+            {
+                if (!IPAddress.TryParse(IpInput.Text, out _))
+                {
+                    UpdateStatus("❌ Неверный IP");
+                    StartButton.IsEnabled = true;
+                    DisconnectButton.IsEnabled = false;
+                    return;
+                }
+
+                _client = new ChatClient();
+                _client.OnStatusChanged += UpdateStatus;
+                _client.OnMessageReceived += msg => AddMessage(msg, false);
+
+                bool connected = await _client.ConnectToHostAsync(IpInput.Text, port, 10);
+                if (!connected)
+                {
+                    UpdateStatus("❌ Не удалось подключиться");
+                    StartButton.IsEnabled = true;
+                    DisconnectButton.IsEnabled = false;
+                    return;
+                }
+                SendButton.IsEnabled = true;
+            }
         }
-    }
 
-    private async Task SendMessageAsync()
-    {
-        string message = MessageInput.Text?.Trim() ?? "";
-        if (string.IsNullOrEmpty(message))
-            return;
-
-        try
+        private async Task SendMessageAsync()
         {
-            if (_host != null)
-                await _host.SendMessageAsync(message);
-            else if (_client != null)
-                await _client.SendMessageAsync(message);
+            string message = MessageInput.Text?.Trim() ?? "";
+            if (string.IsNullOrEmpty(message))
+                return;
 
-            AddMessage(message, true);
-            MessageInput.Text = "";
+            try
+            {
+                if (_host != null)
+                    await _host.SendMessageAsync(message);
+                else if (_client != null)
+                    await _client.SendMessageAsync(message);
+
+                AddMessage(message, true);
+                MessageInput.Text = "";
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"❌ Ошибка отправки: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            UpdateStatus($"❌ Ошибка отправки: {ex.Message}");
-        }
+
+        private void UpdateStatus(string status) =>
+            Dispatcher.UIThread.Post(() => StatusText.Text = status);
     }
-
-    private void UpdateStatus(string status) =>
-        Dispatcher.UIThread.Post(() => StatusText.Text = status);
 }

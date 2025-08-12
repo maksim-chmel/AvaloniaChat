@@ -74,7 +74,7 @@ public class ChatHost
     private async Task<TcpClient?> WaitForClientWithTimeoutAsync(TcpListener listener, CancellationToken token)
     {
         var acceptTask = listener.AcceptTcpClientAsync();
-        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(Program.timeoutSeconds), token);
+        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(Program.TimeoutSeconds), token);
 
         var completedTask = await Task.WhenAny(acceptTask, timeoutTask);
 

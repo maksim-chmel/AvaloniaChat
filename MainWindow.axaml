@@ -44,7 +44,12 @@
             <TextBlock Name="StatusText" Foreground="Black" FontSize="12" 
                        Text="Готово" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
         </Border>
-
+        <Border DockPanel.Dock="Top" Background="#E8F0FE" CornerRadius="4"
+                Padding="6" Margin="0,0,0,8" BorderBrush="#CCC" BorderThickness="1" Height="28">
+            <TextBlock Name="MyIpText" Foreground="Black" FontSize="12" 
+                       Text="Мой IP: —"
+                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        </Border>
        
         <DockPanel DockPanel.Dock="Bottom" Height="50" Margin="0,8,0,0" LastChildFill="True" VerticalAlignment="Center">
             <Button Name="SendButton" Content="➤" Width="44" Height="36"
