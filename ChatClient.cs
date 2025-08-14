@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AvaloniaChat;
 
-public class ChatClient(IChatService chatService,ISecureChannel secureChannel) : IChatClient
+public class ChatClient(IChatService chatService, ISecureChannel secureChannel) : IChatClient
 {
     private TcpClient? _client;
 
@@ -23,17 +23,17 @@ public class ChatClient(IChatService chatService,ISecureChannel secureChannel) :
     {
         if (!IPAddress.TryParse(ipString, out IPAddress? ip))
         {
-            OnStatusChanged?.Invoke("❌ Неверный IP адрес");
+            OnStatusChanged?.Invoke("❌ Invalid IP address");
             return false;
         }
 
-        OnStatusChanged?.Invoke($"🔌 Подключение к {ip}:{port}...");
+        OnStatusChanged?.Invoke($"🔌 Connecting to {ip}:{port}...");
 
         var client = await ConnectWithRetryAsync(ip, port, timeoutSeconds);
 
         if (client == null)
         {
-            OnStatusChanged?.Invoke("❌ Таймаут подключения");
+            OnStatusChanged?.Invoke("❌ Connection timeout");
             return false;
         }
 
@@ -41,7 +41,7 @@ public class ChatClient(IChatService chatService,ISecureChannel secureChannel) :
         Stream = _client.GetStream();
         Aes = await secureChannel.InitializeAsClientAsync(Stream);
 
-        OnStatusChanged?.Invoke("💬 Подключено! Можно общаться.");
+        OnStatusChanged?.Invoke("💬 Connected! You can start chatting.");
 
         chatService.OnMessageReceived += msg => OnMessageReceived?.Invoke(msg);
         chatService.OnStatusChanged += status => OnStatusChanged?.Invoke(status);
@@ -101,7 +101,7 @@ public class ChatClient(IChatService chatService,ISecureChannel secureChannel) :
     {
         if (Stream == null || Aes == null)
         {
-            OnStatusChanged?.Invoke("❌ Нет подключения");
+            OnStatusChanged?.Invoke("❌ No connection");
             return;
         }
 
@@ -111,7 +111,7 @@ public class ChatClient(IChatService chatService,ISecureChannel secureChannel) :
         }
         catch (Exception ex)
         {
-            OnStatusChanged?.Invoke($"❌ Ошибка отправки: {ex.Message}");
+            OnStatusChanged?.Invoke($"❌ Sending error: {ex.Message}");
         }
     }
 
@@ -133,6 +133,6 @@ public class ChatClient(IChatService chatService,ISecureChannel secureChannel) :
         Aes = null;
         _ctsReceiver = null;
 
-        OnStatusChanged?.Invoke("🔌 Отключено от сервера.");
+        OnStatusChanged?.Invoke("🔌 Disconnected from server.");
     }
 }

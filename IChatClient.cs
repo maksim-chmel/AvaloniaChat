@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -10,4 +11,6 @@ public interface IChatClient
     Task<TcpClient?> ConnectWithRetryAsync(IPAddress serverIp, int port, int timeoutSeconds);
     Task SendMessageAsync(string message);
     void Disconnect();
+    public event Action<string>? OnStatusChanged;
+    public event Action<string>? OnMessageReceived;
 }

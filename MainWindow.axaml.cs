@@ -12,10 +12,10 @@ namespace AvaloniaChat
 {
     public partial class MainWindow : Window
     {
-        private ChatHost? _host;
+        private IChatHost? _host;
         private readonly IChatService _chatService;
         private readonly ISecureChannel _secureChannel;
-        private ChatClient? _client;
+        private IChatClient? _client;
 
         public MainWindow(IChatService chatService, ISecureChannel secureChannel)
         {
@@ -24,19 +24,17 @@ namespace AvaloniaChat
 
             InitializeComponent();
 
-           
             MessagesList.Items.Clear();
             HostRadio.Checked += (_, __) => IpInput.IsEnabled = false;
             ClientRadio.Checked += (_, __) => IpInput.IsEnabled = true;
 
-            
             StartButton.Click += async (_, __) => await StartChatAsync();
             SendButton.Click += async (_, __) => await SendMessageAsync();
             DisconnectButton.Click += DisconnectButton_Click;
 
             SendButton.IsEnabled = false;
             DisconnectButton.IsEnabled = false;
-            
+
             MessageInput.KeyDown += (s, e) =>
             {
                 if (e.Key == Key.Enter && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
@@ -45,17 +43,16 @@ namespace AvaloniaChat
                     e.Handled = true;
                 }
             };
-           
 
             Dispatcher.UIThread.Post(() => MessageInput.Focus());
         }
+
         protected override void OnOpened(EventArgs e)
         {
             base.OnOpened(e);
-            MyIpText.Text = $"Мой IP: {NetworkHelper.GetLocalIpAddress()}";
+            MyIpText.Text = $"My IP: {NetworkHelper.GetLocalIpAddress()}";
         }
 
-        
         private void DisconnectButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             try
@@ -64,18 +61,18 @@ namespace AvaloniaChat
                 {
                     _host.StopHostAsync();
                     _host = null;
-                    UpdateStatus("🔌 Хост остановлен.");
+                    UpdateStatus("🔌 Host stopped.");
                 }
                 else if (_client != null)
                 {
                     _client.Disconnect();
                     _client = null;
-                    UpdateStatus("🔌 Клиент отключён.");
+                    UpdateStatus("🔌 Client disconnected.");
                 }
             }
             catch (Exception ex)
             {
-                UpdateStatus($"❌ Ошибка при отключении: {ex.Message}");
+                UpdateStatus($"❌ Error while disconnecting: {ex.Message}");
             }
 
             StartButton.IsEnabled = true;
@@ -109,7 +106,6 @@ namespace AvaloniaChat
 
                 MessagesList.Items.Add(bubble);
 
-                
                 MessagesList.ScrollIntoView(MessagesList.ItemCount - 1);
             });
         }
@@ -123,7 +119,7 @@ namespace AvaloniaChat
 
             if (!int.TryParse(PortInput.Text, out int port))
             {
-                UpdateStatus("❌ Неверный порт");
+                UpdateStatus("❌ Invalid port");
                 StartButton.IsEnabled = true;
                 DisconnectButton.IsEnabled = false;
                 return;
@@ -143,7 +139,7 @@ namespace AvaloniaChat
             {
                 if (!IPAddress.TryParse(IpInput.Text, out _))
                 {
-                    UpdateStatus("❌ Неверный IP");
+                    UpdateStatus("❌ Invalid IP address");
                     StartButton.IsEnabled = true;
                     DisconnectButton.IsEnabled = false;
                     return;
@@ -156,7 +152,7 @@ namespace AvaloniaChat
                 bool connected = await _client.ConnectToHostAsync(IpInput.Text, port, 10);
                 if (!connected)
                 {
-                    UpdateStatus("❌ Не удалось подключиться");
+                    UpdateStatus("❌ Failed to connect");
                     StartButton.IsEnabled = true;
                     DisconnectButton.IsEnabled = false;
                     return;
@@ -183,7 +179,7 @@ namespace AvaloniaChat
             }
             catch (Exception ex)
             {
-                UpdateStatus($"❌ Ошибка отправки: {ex.Message}");
+                UpdateStatus($"❌ Sending error: {ex.Message}");
             }
         }
 

@@ -9,27 +9,27 @@
 
     <DockPanel Margin="8" LastChildFill="True">
 
-      
+       
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Height="40" VerticalAlignment="Center">
 
             <Border Background="#F0F0F0" Padding="4,2" CornerRadius="6" BorderBrush="#CCC" BorderThickness="1" MinWidth="110" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <RadioButton Name="HostRadio" Content="Хост" Foreground="Black" FontSize="14" VerticalAlignment="Center"/>
-                    <RadioButton Name="ClientRadio" Content="Клиент" Foreground="Black" FontSize="14" VerticalAlignment="Center"/>
+                    <RadioButton Name="HostRadio" Content="Host" Foreground="Black" FontSize="14" VerticalAlignment="Center"/>
+                    <RadioButton Name="ClientRadio" Content="Client" Foreground="Black" FontSize="14" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
-            <TextBox Name="IpInput" IsEnabled="False" Watermark="IP адрес"
+            <TextBox Name="IpInput" IsEnabled="False" Watermark="IP address"
                      Background="White" BorderBrush="#CCC" Foreground="Black"
                      MinWidth="120" MaxWidth="150" Height="28"
                      VerticalAlignment="Center" />
 
-            <TextBox Name="PortInput" Text="5000" Watermark="Порт"
+            <TextBox Name="PortInput" Text="5000" Watermark="Port"
                      Background="White" BorderBrush="#CCC" Foreground="Black"
                      Width="70" Height="28"
                      VerticalAlignment="Center" />
 
-            <Button Name="StartButton" Content="Старт" Width="80" Height="28"
+            <Button Name="StartButton" Content="Start" Width="80" Height="28"
                     Background="#0A84FF" Foreground="White" BorderBrush="#0A84FF"
                     VerticalAlignment="Center"/>
 
@@ -38,32 +38,34 @@
                     VerticalAlignment="Center"/>
         </StackPanel>
 
-        
+       
         <Border DockPanel.Dock="Top" Background="#F0F0F0" CornerRadius="4"
                 Padding="6" Margin="0,8,0,8" BorderBrush="#CCC" BorderThickness="1" Height="28">
             <TextBlock Name="StatusText" Foreground="Black" FontSize="12" 
-                       Text="Готово" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                       Text="Ready" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
         </Border>
+
+        
         <Border DockPanel.Dock="Top" Background="#E8F0FE" CornerRadius="4"
                 Padding="6" Margin="0,0,0,8" BorderBrush="#CCC" BorderThickness="1" Height="28">
             <TextBlock Name="MyIpText" Foreground="Black" FontSize="12" 
-                       Text="Мой IP: —"
+                       Text="My IP: —"
                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
         </Border>
+
        
         <DockPanel DockPanel.Dock="Bottom" Height="50" Margin="0,8,0,0" LastChildFill="True" VerticalAlignment="Center">
             <Button Name="SendButton" Content="➤" Width="44" Height="36"
                     Background="#0A84FF" Foreground="White" BorderBrush="#0A84FF" IsEnabled="False"
                     VerticalAlignment="Center" HorizontalAlignment="Right"
                     DockPanel.Dock="Right" />
-            <TextBox Name="MessageInput" Watermark="Введите сообщение"
+            <TextBox Name="MessageInput" Watermark="Enter message"
                      Background="White" BorderBrush="#CCC" Foreground="Black"
                      VerticalAlignment="Center"
                      HorizontalAlignment="Stretch"
                      Margin="0,0,8,0"/>
         </DockPanel>
-
-       
+        
         <ListBox Name="MessagesList" Margin="0,6"
                  Background="White" BorderBrush="#CCC" BorderThickness="1"
                  Foreground="Black"

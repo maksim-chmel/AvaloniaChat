@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace AvaloniaChat;
 
-public class ChatHost(IChatService chatService,ISecureChannel secureChannel) : IChatHost
+public class ChatHost(IChatService chatService, ISecureChannel secureChannel) : IChatHost
 {
-    
     private TcpListener? _listener;
 
     public event Action<string>? OnStatusChanged;
@@ -26,18 +25,32 @@ public class ChatHost(IChatService chatService,ISecureChannel secureChannel) : I
     {
         if (_listener != null)
         {
-            OnStatusChanged?.Invoke("❌ Хост уже запущен.");
+            OnStatusChanged?.Invoke("❌ Host is already running.");
             return;
         }
 
-        _listener = new TcpListener(IPAddress.Any, port);
+        try
+        {
+            _listener = new TcpListener(IPAddress.Any, port);
 
-        
-        _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-        _listener.Start();
-        OnStatusChanged?.Invoke("Хостинг запущен. Ожидаем подключения...");
-
+            _listener.Start();
+        }
+        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
+        {
+            OnStatusChanged?.Invoke($"❌ Port {port} is already in use.");
+            _listener = null;
+            return;
+        }
+        catch (Exception ex)
+        {
+            OnStatusChanged?.Invoke($"❌ Failed to start host: {ex.Message}");
+            _listener = null;
+            return;
+        }
+       
+        OnStatusChanged?.Invoke("Hosting started. Waiting for a client...");
         try
         {
             TcpClient? client = await WaitForClientWithTimeoutAsync(_listener, CancellationToken.None);
@@ -45,13 +58,13 @@ public class ChatHost(IChatService chatService,ISecureChannel secureChannel) : I
             if (client != null)
             {
                 OnClientConnected?.Invoke();
-                OnStatusChanged?.Invoke("✅ Клиент подключен!");
+                OnStatusChanged?.Invoke("✅ Client connected!");
 
                 _stream = client.GetStream();
                 _aes = await secureChannel.InitializeAsHostAsync(_stream);
                 _ctsReceiver = new CancellationTokenSource();
 
-                OnStatusChanged?.Invoke("💬 Чат запущен!");
+                OnStatusChanged?.Invoke("💬 Chat started!");
 
                 chatService.OnMessageReceived += msg => OnMessageReceived?.Invoke(msg);
                 chatService.OnStatusChanged += status => OnStatusChanged?.Invoke(status);
@@ -60,14 +73,13 @@ public class ChatHost(IChatService chatService,ISecureChannel secureChannel) : I
             }
             else
             {
-                OnStatusChanged?.Invoke("❌ Таймаут ожидания клиента.");
+                OnStatusChanged?.Invoke("❌ Client connection timed out.");
             }
         }
         catch (Exception ex)
         {
-            OnStatusChanged?.Invoke($"Ошибка: {ex.Message}");
+            OnStatusChanged?.Invoke($"Error: {ex.Message}");
         }
-        
     }
 
     private async Task<TcpClient?> WaitForClientWithTimeoutAsync(TcpListener listener, CancellationToken token)
@@ -90,7 +102,7 @@ public class ChatHost(IChatService chatService,ISecureChannel secureChannel) : I
     {
         if (_stream == null || _aes == null)
         {
-            OnStatusChanged?.Invoke("❌ Нет подключения для отправки сообщения.");
+            OnStatusChanged?.Invoke("❌ No connection to send the message.");
             return;
         }
 
@@ -100,7 +112,7 @@ public class ChatHost(IChatService chatService,ISecureChannel secureChannel) : I
         }
         catch (Exception ex)
         {
-            OnStatusChanged?.Invoke($"❌ Ошибка отправки: {ex.Message}");
+            OnStatusChanged?.Invoke($"❌ Send error: {ex.Message}");
         }
     }
 
@@ -125,7 +137,7 @@ public class ChatHost(IChatService chatService,ISecureChannel secureChannel) : I
             // ignored
         }
 
-        OnStatusChanged?.Invoke("🔌 Хост остановлен.");
+        OnStatusChanged?.Invoke("🔌 Host stopped.");
         return Task.CompletedTask;
     }
 }

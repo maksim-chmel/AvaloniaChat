@@ -22,6 +22,6 @@ public static class NetworkHelper
                 }
             }
         }
-        return "IP не найден";
+        return "IP not found";
     }
 }

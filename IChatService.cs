@@ -7,8 +7,8 @@ namespace AvaloniaChat;
 
 public interface IChatService
 {
-    Task StartReceiverLoop(NetworkStream stream, AesEncryption aes, CancellationToken token);
-    Task SendMessageAsync(NetworkStream stream, AesEncryption aes, string message);
+    Task StartReceiverLoop(NetworkStream stream, IAesEncryption aes, CancellationToken token);
+    Task SendMessageAsync(NetworkStream stream, IAesEncryption aes, string message);
     event Action<string>? OnMessageReceived;
     event Action<string>? OnStatusChanged;
 }

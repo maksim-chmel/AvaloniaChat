@@ -11,7 +11,7 @@ public class ChatService : IChatService
     public event Action<string>? OnMessageReceived;
     public event Action<string>? OnStatusChanged;
 
-    public async Task StartReceiverLoop(NetworkStream stream, AesEncryption aes, CancellationToken token)
+    public async Task StartReceiverLoop(NetworkStream stream, IAesEncryption aes, CancellationToken token)
     {
         try
         {
@@ -24,7 +24,7 @@ public class ChatService : IChatService
                     int bytesRead = await stream.ReadAsync(lengthBuffer, read, 4 - read, token);
                     if (bytesRead == 0)
                     {
-                        OnStatusChanged?.Invoke("⚠️ Собеседник отключился");
+                        OnStatusChanged?.Invoke("⚠️ The peer has disconnected");
                         return;
                     }
                     read += bytesRead;
@@ -33,7 +33,7 @@ public class ChatService : IChatService
                 int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
                 if (messageLength <= 0)
                 {
-                    OnStatusChanged?.Invoke("❌ Некорректная длина сообщения");
+                    OnStatusChanged?.Invoke("❌ Invalid message length");
                     continue;
                 }
 
@@ -44,7 +44,7 @@ public class ChatService : IChatService
                     int bytesRead = await stream.ReadAsync(messageBuffer, read, messageLength - read, token);
                     if (bytesRead == 0)
                     {
-                        OnStatusChanged?.Invoke("⚠️ Собеседник отключился");
+                        OnStatusChanged?.Invoke("⚠️ The peer has disconnected");
                         return;
                     }
                     read += bytesRead;
@@ -58,15 +58,15 @@ public class ChatService : IChatService
                 }
                 catch
                 {
-                    OnStatusChanged?.Invoke("❌ Ошибка расшифровки сообщения");
+                    OnStatusChanged?.Invoke("❌ Failed to decrypt the message");
                     continue;
                 }
 
-                OnStatusChanged?.Invoke($"Получено сообщение: {decrypted}");
+                OnStatusChanged?.Invoke($"Received message: {decrypted}");
 
                 if (decrypted == "__exit__")
                 {
-                    OnStatusChanged?.Invoke("👋 Собеседник вышел из чата");
+                    OnStatusChanged?.Invoke("👋 The peer has left the chat");
                     break;
                 }
 
@@ -75,18 +75,18 @@ public class ChatService : IChatService
         }
         catch (OperationCanceledException)
         {
-            OnStatusChanged?.Invoke("⏹ Приём сообщений остановлен.");
+            OnStatusChanged?.Invoke("⏹ Message receiving stopped.");
         }
         catch (Exception ex)
         {
-            OnStatusChanged?.Invoke($"❌ Ошибка приёма сообщений: {ex.Message}");
+            OnStatusChanged?.Invoke($"❌ Error while receiving messages: {ex.Message}");
         }
     }
 
-    public async Task SendMessageAsync(NetworkStream stream, AesEncryption aes, string message)
+    public async Task SendMessageAsync(NetworkStream stream, IAesEncryption aes, string message)
     {
         string encrypted = aes.Encrypt(message);
-        OnStatusChanged?.Invoke($"Отправлено сообщение: {message}");
+        OnStatusChanged?.Invoke($"Sent message: {message}");
 
         byte[] encryptedData = Encoding.UTF8.GetBytes(encrypted);
 
